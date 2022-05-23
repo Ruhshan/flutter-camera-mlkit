@@ -9,6 +9,6 @@ class FlutterCameraMlkit {
   }
 
   Widget getCameraPreview(){
-    return CameraPreview(this);
+    return FaceView(this);
   }
 }
