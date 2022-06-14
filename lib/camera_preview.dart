@@ -51,7 +51,7 @@ class _FaceViewState extends State<FaceView>{
 
     String res = await widget.flutterCameraMlkit.processImage(inputImage) ?? "";
     _inSide = this.isInside(res, _circleRect);
-    print("IMG",res);
+
     setState((){
       _result = "Face:"+res+"\n"+"Circle: "+_circleRect.toString();
 
