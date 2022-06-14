@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_camera_mlkit/input_image.dart';
 
 import 'flutter_camera_mlkit_platform_interface.dart';
 
@@ -13,5 +14,12 @@ class MethodChannelFlutterCameraMlkit extends FlutterCameraMlkitPlatform {
   Future<String?> getPlatformVersion() async {
     final version = await methodChannel.invokeMethod<String>('getPlatformVersion');
     return version;
+  }
+
+
+  @override
+  Future<String?> processImage(InputImage inputImage) async{
+    final result = await methodChannel.invokeMethod('processImage',<String,dynamic>{'image_data':inputImage.toJson()});
+    return result;
   }
 }

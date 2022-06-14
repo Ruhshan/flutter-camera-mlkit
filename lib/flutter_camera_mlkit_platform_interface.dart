@@ -1,3 +1,4 @@
+import 'package:flutter_camera_mlkit/input_image.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 import 'flutter_camera_mlkit_method_channel.dart';
@@ -25,5 +26,11 @@ abstract class FlutterCameraMlkitPlatform extends PlatformInterface {
 
   Future<String?> getPlatformVersion() {
     throw UnimplementedError('platformVersion() has not been implemented.');
+  }
+
+
+
+  Future<String?>processImage(InputImage inputImage){
+    throw UnimplementedError('processImage() has not been implemented.');
   }
 }

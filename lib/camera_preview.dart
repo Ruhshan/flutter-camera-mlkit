@@ -1,7 +1,10 @@
+import 'dart:ffi';
+
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_camera_mlkit/flutter_camera_mlkit.dart';
+import 'package:flutter_camera_mlkit/util.dart';
+
 
 class FaceView extends StatefulWidget{
   final FlutterCameraMlkit flutterCameraMlkit;
@@ -15,81 +18,85 @@ class FaceView extends StatefulWidget{
 
 class _FaceViewState extends State<FaceView>{
   late CameraController controller;
-  String _platformVersion = 'Unknown';
+  late Future<void> _initializeControllerFuture;
+  String _result = '';
+  Rect _circleRect = Rect.fromLTRB(0.0, 0.0, 0.0, 0.0);
+  double _circlePos = 300.0;
+  bool _inSide = false;
+
+  late Future<void> _setupDone;
 
   @override
   void initState() {
     super.initState();
-
-    initPlatformState();
-    initCamera();
+    _setupDone = initCamera();
   }
 
   Future<void> initCamera() async{
     final cameras = await availableCameras();
-    final firstCamera = cameras[1];
+    final firstCamera = cameras[0];
     controller = CameraController(firstCamera, ResolutionPreset.low);
-    controller.initialize().then((_) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {});
-    }).catchError((Object e) {
-      if (e is CameraException) {
-        switch (e.code) {
-          case 'CameraAccessDenied':
-            print('User denied camera access.');
-            break;
-          default:
-            print('Handle other errors.');
-            break;
-        }
-      }
+
+    await controller.initialize();
+
+    controller.startImageStream((CameraImage image){
+          processCameraImage(image, cameras);
     });
+
   }
 
-  Future<void> initPlatformState() async {
-    String platformVersion;
-    // Platform messages may fail, so we use a try/catch PlatformException.
-    // We also handle the message potentially returning null.
-    try {
-      platformVersion =
-          await widget.flutterCameraMlkit.getPlatformVersion() ?? 'Unknown platform version';
-    } on PlatformException {
-      platformVersion = 'Failed to get platform version.';
-    }
+  void processCameraImage(CameraImage image, List<CameraDescription> cameras) async {
 
-    setState(() {
-      _platformVersion = platformVersion;
+    final inputImage = convertImage(image, cameras);
+
+    String res = await widget.flutterCameraMlkit.processImage(inputImage) ?? "";
+    _inSide = this.isInside(res, _circleRect);
+    print("IMG",res);
+    setState((){
+      _result = "Face:"+res+"\n"+"Circle: "+_circleRect.toString();
+
     });
+
+  }
+
+  bool isInside(String faceRect, Rect ovalRect){
+    faceRect = faceRect.substring(11,faceRect.length-1);
+    List<String> splitted = faceRect.split(",");
+    List<double> faceCords = splitted.map(double.parse).toList();
+
+    Rect faceR = Rect.fromLTRB(faceCords[0], faceCords[1], faceCords[2], faceCords[3]);
+
+    return faceR.left>= ovalRect.left && faceR.right<=ovalRect.right && faceR.top>=ovalRect.top && faceR.bottom<=ovalRect.bottom;
+
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!controller.value.isInitialized) {
-      return Container();
-    }
-    return ClipOval(
-      clipper: CameraPreviewClipper(context),
-      child: CameraPreview(controller),
+    this._circleRect = getCircleRect(context, this._circlePos);
+    return FutureBuilder<void>(
+      future: _setupDone,
+      builder: (context, snapshot){
+        if (snapshot.connectionState == ConnectionState.done) {
+          // If the Future is complete, display the preview.
+          return ListView(
+            children: <Widget>[
+
+              ClipOval(
+                clipper: CameraPreviewClipper(context, this._circlePos),
+                child: CameraPreview(controller),
+              ),
+              Text(_result, textAlign: TextAlign.center),
+              Text(_inSide ?"IN":"OUT", textAlign: TextAlign.center,
+                style: TextStyle(color: _inSide ? Colors.green:Colors.red))
+            ],
+          );
+        } else {
+          // Otherwise, display a loading indicator.
+          return const Center(child: CircularProgressIndicator());
+        }
+      },
     );
   }
   
 }
 
-class CameraPreviewClipper extends CustomClipper<Rect> {
-  BuildContext _context;
-  CameraPreviewClipper(this._context);
-
-  @override
-  Rect getClip(Size size) {
-    double width = MediaQuery.of(_context).size.width;
-    double xPosition = (width/2) ;
-    return Rect.fromCircle(center: Offset(xPosition, 200), radius: 150);
-  }
-
-  @override
-  bool shouldReclip(covariant CustomClipper<Rect> oldClipper) {
-    return false;
-  }
-}
