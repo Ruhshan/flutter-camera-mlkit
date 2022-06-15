@@ -7,3 +7,5 @@ abstract class FaceState extends Equatable{
   @override
   List<Object> get props => [];
 }
+
+class FaceInial extends FaceState{}
