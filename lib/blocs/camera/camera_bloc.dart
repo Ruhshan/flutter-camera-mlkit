@@ -4,47 +4,42 @@ import 'package:camera/camera.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:flutter_camera_mlkit/utils/camera_utils.dart';
-part 'camera_event.dart';
 
-part 'camera_state.dart';
+import 'camera_event.dart';
+import 'camera_state.dart';
 
 class CameraBloc extends Bloc<CameraEvent, CameraState> {
   final CameraUtils cameraUtils;
   final ResolutionPreset resolutionPreset;
   final CameraLensDirection cameraLensDirection;
 
-  CameraController _controller;
+  late CameraController _controller;
 
   CameraBloc({
     required this.cameraUtils,
     this.resolutionPreset = ResolutionPreset.low,
-    this.cameraLensDirection = CameraLensDirection.back,
-  }) : super(CameraInitial());
+    this.cameraLensDirection = CameraLensDirection.front,
+  }) : super(CameraInitial()){
+    on<CameraInitialized>((event, emit)=>_mapCameraInitializedToState(event, emit));
+  }
 
   CameraController getController() => _controller;
 
   bool isInitialized() => _controller.value.isInitialized ?? false;
 
-  @override
-  Stream<CameraState> mapEventToState(
-      CameraEvent event,
-      ) async* {
-    if (event is CameraInitialized)
-      yield* _mapCameraInitializedToState(event);
-    else if (event is CameraStopped) yield* _mapCameraStoppedToState(event);
-  }
 
-  Stream<CameraState> _mapCameraInitializedToState(CameraInitialized event) async* {
+
+  void _mapCameraInitializedToState(CameraInitialized event, Emitter<CameraState> emit) async {
     try {
       _controller = await cameraUtils
           .getCameraController(resolutionPreset, cameraLensDirection);
       await _controller.initialize();
-      yield CameraReady();
+      emit(CameraReady());
     } on CameraException catch (error) {
       _controller.dispose();
-      yield CameraFailure(error: error.description.toString());
+      emit(CameraFailure(error: error.description.toString()));
     } catch (error) {
-      yield CameraFailure(error: error.toString());
+      emit(CameraFailure(error: error.toString()));
     }
   }
 
