@@ -22,7 +22,7 @@ class CameraPreviewClipper extends CustomClipper<Rect> {
   }
 }
 
-InputImage convertImage(CameraImage image, List<CameraDescription> cameras){
+InputImage convertImage(CameraImage image, CameraDescription camera){
   final WriteBuffer allBytes = WriteBuffer();
   for (final Plane plane in image.planes) {
     allBytes.putUint8List(plane.bytes);
@@ -32,7 +32,6 @@ InputImage convertImage(CameraImage image, List<CameraDescription> cameras){
   final Size imageSize =
   Size(image.width.toDouble(), image.height.toDouble());
 
-  final camera = cameras[0];
   final imageRotation =
       InputImageRotationValue.fromRawValue(camera.sensorOrientation) ??
           InputImageRotation.rotation0deg;

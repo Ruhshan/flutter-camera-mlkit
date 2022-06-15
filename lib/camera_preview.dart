@@ -4,6 +4,8 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_camera_mlkit/blocs/camera/camera_bloc.dart';
+import 'package:flutter_camera_mlkit/blocs/face/face_bloc.dart';
+import 'package:flutter_camera_mlkit/blocs/face/face_event.dart';
 import 'package:flutter_camera_mlkit/flutter_camera_mlkit.dart';
 import 'package:flutter_camera_mlkit/util.dart';
 import 'package:flutter_camera_mlkit/utils/camera_utils.dart';
@@ -23,11 +25,15 @@ class FaceView extends StatefulWidget{
 }
 
 class _FaceViewState extends State<FaceView>{
+  late FaceBloc faceBloc;
+
   @override
   void initState() {
     super.initState();
     final cameraBloc = BlocProvider.of<CameraBloc>(context);
     cameraBloc.add(CameraInitialized());
+
+    faceBloc = FaceBloc(cameraBloc: cameraBloc, flutterCameraMlkit: widget.flutterCameraMlkit);
   }
 
 
@@ -51,7 +57,9 @@ class _FaceViewState extends State<FaceView>{
   Widget build(BuildContext context) {
       return BlocConsumer<CameraBloc, CameraState>(
         listener: (context, state){
-          print("Listening"+ state.toString());
+          if(state is CameraReady){
+            faceBloc.add(FaceAnalysisStart());
+          }
         },
         builder: (context, state){
           if(state is CameraReady){

@@ -45,7 +45,6 @@ public class FlutterCameraMlkitPlugin implements FlutterPlugin, MethodCallHandle
     if (call.method.equals("getPlatformVersion")) {
       result.success("Android " + Build.VERSION.RELEASE);
     }else if(call.method.equals("processImage")){
-      System.out.println("received image in plugin");
       faceAnalysis.analyseFaceFromInputImage(call, context, result);
     }
     else {

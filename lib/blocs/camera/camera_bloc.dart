@@ -27,6 +27,8 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
 
   bool isInitialized() => _controller.value.isInitialized ?? false;
 
+  CameraDescription getCamera() => cameraUtils.getCamera();
+
 
 
   void _mapCameraInitializedToState(CameraInitialized event, Emitter<CameraState> emit) async {
