@@ -26,8 +26,8 @@ class _FaceViewState extends State<FaceView>{
   @override
   void initState() {
     super.initState();
-    final bloc = BlocProvider.of<CameraBloc>(context);
-    bloc.add(CameraInitialized());
+    final cameraBloc = BlocProvider.of<CameraBloc>(context);
+    cameraBloc.add(CameraInitialized());
   }
 
 
@@ -49,7 +49,10 @@ class _FaceViewState extends State<FaceView>{
 
   @override
   Widget build(BuildContext context) {
-      return BlocBuilder<CameraBloc, CameraState>(
+      return BlocConsumer<CameraBloc, CameraState>(
+        listener: (context, state){
+          print("Listening"+ state.toString());
+        },
         builder: (context, state){
           if(state is CameraReady){
             return ClipOval(
